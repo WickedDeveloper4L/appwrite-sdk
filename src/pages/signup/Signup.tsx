@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import styles from "../login/login.module.scss";
 import { Link, useNavigate } from "react-router";
-import { account } from "../../../appwrite";
+import { account, databases } from "../../../appwrite";
 import { ID, Models } from "appwrite";
+const databaseID = import.meta.env.VITE_SUPABASE_DATABASE_ID;
+const collectionID = import.meta.env.VITE_SUPABASE_COLLECTION_ID;
+
 interface SignupProps {
   name: string;
   email: string;
@@ -27,22 +30,35 @@ const Signup = () => {
       [name]: value,
     });
   };
+  const createProfile = async (id: string) => {
+    try {
+      await databases.createDocument(databaseID, collectionID, id, {
+        email: signupInfo.email,
+        name: signupInfo.name,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
     try {
-      const response = await account.create(
+      await account.create(
         ID.unique(),
         signupInfo.email,
         signupInfo.password,
         signupInfo.name
       );
-      console.log(response);
+
       await account.createEmailPasswordSession(
         signupInfo.email,
         signupInfo.password
       );
+
       const userSession = await account.get();
+      const { $id } = userSession;
+      await createProfile($id);
       setUser(userSession);
       setIsLoading(false);
     } catch (error) {
@@ -50,6 +66,7 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
+
   const navigate = useNavigate();
   useEffect(() => {
     if (user) {

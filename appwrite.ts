@@ -1,6 +1,8 @@
-import { Account, Client } from "appwrite";
+import { Account, Client, Databases } from "appwrite";
 
+const clientID = import.meta.env.VITE_SUPABASE_CLIENT_ID;
 const client = new Client();
-client.setProject("678a40280009059d024a");
+client.setProject(clientID);
 
 export const account = new Account(client);
+export const databases = new Databases(client);
